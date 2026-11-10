@@ -1,0 +1,62 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: pocket_consultancy_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=pocket_consultancy_v2
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - pocket_network
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pocket_consultancy_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PROJECT_NAME: Pocket Consultancy V2
+      ENVIRONMENT: development
+      DEBUG: "false"
+      MONGODB_URI: mongodb://mongodb:27017
+      MONGODB_DB_NAME: pocket_consultancy_v2
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in your .env file}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      UPLOAD_DIR: storage/uploads
+      MAX_UPLOAD_SIZE_MB: 5
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000,http://127.0.0.1:8000
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@pocketconsultancy.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in your .env file}
+      ADMIN_FULL_NAME: ${ADMIN_FULL_NAME:-System Administrator}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/storage/uploads
+    networks:
+      - pocket_network
+
+volumes:
+  mongodb_data:
+    name: pocket_consultancy_mongodb_data
+  uploads_data:
+    name: pocket_consultancy_uploads_data
+
+networks:
+  pocket_network:
+    name: pocket_consultancy_network
+    driver: bridge
