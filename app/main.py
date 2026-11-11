@@ -36,24 +36,26 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Modern FastAPI application lifespan context manager."""
     logger.info("Initializing %s...", settings.PROJECT_NAME)
 
-    # 1. Ensure storage directory exists
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
-    # 2. Connect to MongoDB
     try:
         await connect_to_mongo()
-        if mongo_manager.db is not None:
-            await init_database(mongo_manager.db)
-    except Exception as exc:
-        logger.error("Database initialization encountered an error: %s", exc)
+        if mongo_manager.db is None:
+            raise RuntimeError("MongoDB connection initialized without a database.")
+        await init_database(mongo_manager.db)
+    except Exception:
+        logger.exception("Application startup failed during database initialization.")
+        await close_mongo_connection()
+        raise
 
     logger.info("%s started successfully.", settings.PROJECT_NAME)
-    yield
 
-    # 3. Shutdown teardown
-    logger.info("Initiating graceful shutdown...")
-    await close_mongo_connection()
-    logger.info("Teardown completed.")
+    try:
+        yield
+    finally:
+        logger.info("Initiating graceful shutdown...")
+        await close_mongo_connection()
+        logger.info("Teardown completed.")
 
 
 app = FastAPI(

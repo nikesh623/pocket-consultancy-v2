@@ -1,6 +1,6 @@
 # Vercel Deployment Guide — Pocket Consultancy V2 Frontend
 
-This guide explains how to deploy the **Pocket Consultancy V2** Next.js frontend independently to **Vercel** and connect it with your hosted FastAPI backend.
+This guide explains how to deploy the **Pocket Consultancy V2** Next.js frontend independently to **Vercel** and connect it with the FastAPI backend deployed on Render.
 
 ---
 
@@ -37,7 +37,7 @@ The frontend runs independently as a serverless Next.js application on Vercel. A
 ## 2. Pre-Deployment Checklist
 
 1. **Deploy the FastAPI Backend:** Ensure your FastAPI backend is running and accessible over public HTTPS (e.g., `https://api.pocketconsultancy.com`).
-2. **Configure Backend CORS:** On your FastAPI backend hosting environment (e.g. `.env`), set `ALLOWED_ORIGINS` to include your Vercel production domain and preview URLs:
+2. **Configure Backend CORS:** In the Render API service's environment settings, set `ALLOWED_ORIGINS` to your Vercel production origin and any custom frontend domain:
    ```env
    ALLOWED_ORIGINS=https://pocket-consultancy-frontend.vercel.app,https://your-custom-domain.com
    ```
@@ -47,7 +47,7 @@ The frontend runs independently as a serverless Next.js application on Vercel. A
 
 ## 3. Deploying via Vercel Dashboard (GitHub / GitLab / Bitbucket)
 
-1. Push your repository to your Git provider.
+1. Push your repository to GitHub.
 2. Log into [vercel.com](https://vercel.com) and click **"Add New..." > "Project"**.
 3. Select your repository.
 4. **Configure Project Settings:**
@@ -58,7 +58,7 @@ The frontend runs independently as a serverless Next.js application on Vercel. A
 5. **Environment Variables:**
    Under **Environment Variables**, add:
    * **Key:** `NEXT_PUBLIC_API_BASE_URL`
-   * **Value:** `https://your-production-fastapi-backend.com`
+   * **Value:** `https://<your-render-service>.onrender.com`
    *(Do NOT add a trailing slash)*.
 6. Click **"Deploy"**.
 
@@ -102,6 +102,6 @@ vercel --prod
 Once deployed:
 1. Visit your Vercel URL (e.g. `https://pocket-consultancy-frontend.vercel.app`).
 2. Open DevTools Network tab and verify that requests to `NEXT_PUBLIC_API_BASE_URL/api/v1/...` succeed.
-3. Test login with the administrator credentials configured on the backend. Do not use the example credentials from `.env.example` in production.
+3. Test login with the administrator credentials configured on Render. Do not use the example credentials from `.env.example` in production.
 4. Test student registration and verify that the approval notice is presented.
 5. Upload a sample PDF document in the student workspace and verify that the documentation officer can inspect and approve it.

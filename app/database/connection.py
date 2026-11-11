@@ -34,14 +34,8 @@ async def connect_to_mongo(uri: str | None = None, db_name: str | None = None) -
     )
     mongo_manager.db = mongo_manager.client[database_name]
 
-    # Verify connection via ping
-    try:
-        await mongo_manager.client.admin.command("ping")
-        logger.info("Successfully connected to MongoDB.")
-    except Exception as exc:
-        logger.warning("MongoDB ping failed during startup: %s", exc)
-        # We don't crash here so that offline tooling / test overrides can operate,
-        # but the exception will be raised if db commands fail later.
+    await mongo_manager.client.admin.command("ping")
+    logger.info("Successfully connected to MongoDB.")
 
 
 async def close_mongo_connection() -> None:

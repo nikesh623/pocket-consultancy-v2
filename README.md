@@ -159,3 +159,21 @@ Quick summary:
    ALLOWED_ORIGINS=https://your-frontend.vercel.app
    ```
 5. Deploy.
+
+## 🚀 Render API Deployment
+
+The FastAPI API runs separately from the Vercel frontend. The root-level [`render.yaml`](./render.yaml) defines a Render Blueprint for the API, uses the Dockerfile, and checks `/health`.
+
+1. In MongoDB Atlas, verify the `pocket-consultancy-v2` cluster is active and the `pocket_app_user` database user has access to `pocket_consultancy_v2`.
+2. In Render, choose **New → Blueprint**, connect this GitHub repository, and deploy the `render.yaml` Blueprint.
+3. Enter the Atlas connection URI as `MONGODB_URI`; set `ADMIN_EMAIL` and a unique `ADMIN_PASSWORD` when prompted. Render generates `SECRET_KEY`. Keep these values in Render, not in GitHub or chat.
+4. The first Render deployment cannot connect to Atlas until Atlas allows the Render service's outbound IP ranges. Once the service exists, open its **Connect → Outbound** panel in Render and add its listed CIDR ranges to Atlas **Security → Network Access → IP Access List**. See [Render's outbound IP documentation](https://render.com/docs/outbound-ip-addresses). Do not use `0.0.0.0/0`. The existing current-IP rule only covers local development.
+5. Wait for the Render service to become live and confirm `https://<render-service>.onrender.com/health` reports a healthy database.
+6. In Vercel, import the same repository and set **Root Directory** to `frontend`. Configure `NEXT_PUBLIC_API_BASE_URL` to `https://<render-service>.onrender.com` with no trailing slash, then deploy.
+7. Copy the Vercel production origin (for example, `https://<project>.vercel.app`) into the Render service's `ALLOWED_ORIGINS` variable. Save and redeploy the API. Add any custom frontend domain there as well.
+
+### Render Free Plan Limitations
+
+The Blueprint uses Render's free web-service plan because it was selected for this deployment. Free services can spin down while idle, causing a delay on the next request, and their filesystem is ephemeral. This application stores uploaded documents on local disk, so uploads can be lost when the service restarts, spins down, or redeploys. Use this deployment for evaluation only; do not rely on it for real student documents. Persistent uploads require a paid Render service with a persistent disk or an object-storage integration.
+
+The Render Blueprint uses environment variables marked `sync: false` for credentials. Provide them in Render's dashboard; never add real values to `render.yaml`. `ALLOWED_ORIGINS` initially permits only localhost and must be changed to the deployed Vercel origin after the frontend is deployed.
